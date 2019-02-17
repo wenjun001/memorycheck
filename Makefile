@@ -1,3 +1,3 @@
 all:
-	gcc main.c  memory_detecter.c -o  main.o
+	gcc main.c memory_detector.c  -o main.o
 

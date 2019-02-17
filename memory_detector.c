@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 typedef struct {
     void *address;
@@ -131,9 +132,21 @@ void xfree (void *mem_ref)
     free(mem_ref);
 }
 
+void duplicate_print(FILE *fp, char *fmt,  ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+
+    va_start(ap, fmt);
+    vfprintf(fp, fmt, ap);
+    va_end(ap);
+}
+
 void report_mem_leak (void)
 {
-    printf("report_mem_leak--->>>>>\n");
     unsigned short index;
     MEM_LEAK *leak_info;
 
@@ -142,23 +155,27 @@ void report_mem_leak (void)
 
     if(fp_write != NULL) {
         sprintf(info, "%s\n", "Memory Leak Summary");
+        duplicate_print(fp_write, info);
 
-        fwrite(info, (strlen(info) + 1) , 1, fp_write);
         sprintf(info, "%s\n", "-----------------------------------");
-        fwrite(info, (strlen(info) + 1) , 1, fp_write);
+        duplicate_print(fp_write, info);
 
         for(leak_info = ptr_start; leak_info != NULL;
             leak_info = leak_info->next) {
             sprintf(info, "address : %p\n", leak_info->mem_info.address);
-            fwrite(info, (strlen(info) + 1) , 1, fp_write);
+            duplicate_print(fp_write, info);
+
             sprintf(info, "size    : %lu bytes\n", leak_info->mem_info.size);
-            fwrite(info, (strlen(info) + 1) , 1, fp_write);
+            duplicate_print(fp_write, info);
+
             sprintf(info, "file    : %s\n", leak_info->mem_info.file_name);
-            fwrite(info, (strlen(info) + 1) , 1, fp_write);
+            duplicate_print(fp_write, info);
+
             sprintf(info, "line    : %d\n", leak_info->mem_info.line);
-            fwrite(info, (strlen(info) + 1) , 1, fp_write);
+            duplicate_print(fp_write, info);
+
             sprintf(info, "%s\n", "-----------------------------------");
-            fwrite(info, (strlen(info) + 1) , 1, fp_write);
+            duplicate_print(fp_write, info);
         }
     }
 

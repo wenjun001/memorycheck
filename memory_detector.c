@@ -7,10 +7,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct {
+    void *address;
+    size_t size;
+    char file_name[FILE_NAME_LENGTH];
+    unsigned int line;
+} MEM_INFO;
+
+typedef struct _MEM_LEAK {
+    MEM_INFO mem_info;
+    struct _MEM_LEAK *next;
+} MEM_LEAK;
+
 static MEM_LEAK *ptr_start = NULL;
 static MEM_LEAK *ptr_next =  NULL;
 
-void add(MEM_INFO alloc_info)
+static void add(MEM_INFO alloc_info)
 {
     MEM_LEAK *mem_leak_info = NULL;
     mem_leak_info = (MEM_LEAK *) calloc(1, sizeof(MEM_LEAK));
@@ -30,7 +42,7 @@ void add(MEM_INFO alloc_info)
 }
 
 
-void erase(unsigned pos)
+static void erase(unsigned pos)
 {
     unsigned index = 0;
     MEM_LEAK *alloc_info, *temp;
@@ -53,7 +65,7 @@ void erase(unsigned pos)
 }
 
 
-void clear()
+static void clear()
 {
     MEM_LEAK *temp = ptr_start;
     MEM_LEAK *alloc_info = ptr_start;
@@ -65,6 +77,32 @@ void clear()
     }
 }
 
+static void add_mem_info (void *mem_ref, size_t size,  const char *file,
+                            unsigned int line)
+{
+    MEM_INFO mem_alloc_info;
+
+    memset(&mem_alloc_info, 0, sizeof(mem_alloc_info));
+    mem_alloc_info.address = mem_ref;
+    mem_alloc_info.size = size;
+    mem_alloc_info.line = line;
+    strncpy(mem_alloc_info.file_name, file, FILE_NAME_LENGTH);
+
+    add(mem_alloc_info);
+}
+
+static void remove_mem_info (void *mem_ref)
+{
+    unsigned short index;
+    MEM_LEAK *leak_info = ptr_start;
+
+    for(index = 0; leak_info != NULL; ++index, leak_info = leak_info->next) {
+        if (leak_info->mem_info.address == mem_ref) {
+            erase(index);
+            break;
+        }
+    }
+}
 
 void *xmalloc (size_t size, const char *file, unsigned int line)
 {
@@ -74,7 +112,6 @@ void *xmalloc (size_t size, const char *file, unsigned int line)
     }
     return ptr;
 }
-
 
 void *xcalloc (unsigned int elements, size_t size, const char *file,
                 unsigned int line)
@@ -88,41 +125,10 @@ void *xcalloc (unsigned int elements, size_t size, const char *file,
     return ptr;
 }
 
-
-
 void xfree (void *mem_ref)
 {
     remove_mem_info(mem_ref);
     free(mem_ref);
-}
-
-
-void add_mem_info (void *mem_ref, size_t size,  const char *file,
-                    unsigned int line)
-{
-    MEM_INFO mem_alloc_info;
-
-    memset(&mem_alloc_info, 0, sizeof(mem_alloc_info));
-    mem_alloc_info.address = mem_ref;
-    mem_alloc_info.size = size;
-    mem_alloc_info.line = line;
-    strncpy(mem_alloc_info.file_name, file, FILE_NAME_LENGTH);
-
-    add(mem_alloc_info);
-}
-
-
-void remove_mem_info (void *mem_ref)
-{
-    unsigned short index;
-    MEM_LEAK *leak_info = ptr_start;
-
-    for(index = 0; leak_info != NULL; ++index, leak_info = leak_info->next) {
-        if (leak_info->mem_info.address == mem_ref) {
-            erase(index);
-            break;
-        }
-    }
 }
 
 void report_mem_leak (void)

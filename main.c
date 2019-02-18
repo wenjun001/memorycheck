@@ -9,6 +9,6 @@ int main()
     /* Register exit callback before anything else */
     atexit(report_mem_leak);
 
-    free(ptr1);
+//    free(ptr1);
     return 0;
 }

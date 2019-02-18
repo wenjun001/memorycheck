@@ -66,7 +66,7 @@ static void erase(unsigned pos)
 }
 
 
-static void clear()
+static void clear(void)
 {
     MEM_LEAK *temp = ptr_start;
     MEM_LEAK *alloc_info = ptr_start;
@@ -132,7 +132,7 @@ void xfree (void *mem_ref)
     free(mem_ref);
 }
 
-void duplicate_print(FILE *fp, char *fmt,  ...)
+static void duplicate_print(FILE *fp, char *fmt,  ...)
 {
     va_list ap;
 
@@ -147,7 +147,6 @@ void duplicate_print(FILE *fp, char *fmt,  ...)
 
 void report_mem_leak (void)
 {
-    unsigned short index;
     MEM_LEAK *leak_info;
 
     FILE *fp_write = fopen (OUTPUT_FILE, "wt");
